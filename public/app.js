@@ -1,13 +1,13 @@
 /**
  * app.js
  * ------
- * All the frontend logic: rendering the subreddit sidebar, handling the
+ * All the frontend logic: rendering the site sidebar, handling the
  * add/remove form, and running the chat. This talks to our own backend's
- * /api/... routes with fetch() — never to Reddit or Claude directly (that's
- * the whole reason server.js exists).
+ * /api/... routes with fetch() — never to Stack Exchange or Claude directly
+ * (that's the whole reason server.js exists).
  */
 
-const subredditListEl = document.getElementById("subreddit-list");
+const siteListEl = document.getElementById("site-list");
 const addForm = document.getElementById("add-form");
 const addInput = document.getElementById("add-input");
 
@@ -17,55 +17,55 @@ const askForm = document.getElementById("ask-form");
 const askInput = document.getElementById("ask-input");
 const askButton = document.getElementById("ask-button");
 
-let activeSubreddit = null;
+let activeSite = null;
 
-// --- Subreddit list ---------------------------------------------------
+// --- Site list ---------------------------------------------------
 
-async function loadSubreddits() {
-  const res = await fetch("/api/subreddits");
-  const { subreddits } = await res.json();
-  renderSubredditList(subreddits);
+async function loadSites() {
+  const res = await fetch("/api/sites");
+  const { sites } = await res.json();
+  renderSiteList(sites);
 }
 
-function renderSubredditList(subreddits) {
-  subredditListEl.innerHTML = "";
+function renderSiteList(sites) {
+  siteListEl.innerHTML = "";
 
-  if (!subreddits.length) {
+  if (!sites.length) {
     const hint = document.createElement("li");
     hint.className = "empty-hint";
-    hint.textContent = "No subreddits saved yet. Add one above.";
-    subredditListEl.appendChild(hint);
+    hint.textContent = "No sites saved yet. Add one above (e.g. cooking, diy, money).";
+    siteListEl.appendChild(hint);
     return;
   }
 
-  for (const name of subreddits) {
+  for (const name of sites) {
     const li = document.createElement("li");
-    li.className = "subreddit-item" + (name === activeSubreddit ? " active" : "");
+    li.className = "site-item" + (name === activeSite ? " active" : "");
 
     const nameSpan = document.createElement("span");
     nameSpan.className = "name";
     nameSpan.textContent = name;
-    nameSpan.addEventListener("click", () => selectSubreddit(name));
+    nameSpan.addEventListener("click", () => selectSite(name));
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "remove-btn";
     removeBtn.textContent = "✕";
-    removeBtn.title = `Remove r/${name}`;
+    removeBtn.title = `Remove ${name}`;
     removeBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      await fetch(`/api/subreddits/${encodeURIComponent(name)}`, { method: "DELETE" });
-      if (activeSubreddit === name) {
-        activeSubreddit = null;
-        chatHeader.textContent = "Select a subreddit to start asking questions";
+      await fetch(`/api/sites/${encodeURIComponent(name)}`, { method: "DELETE" });
+      if (activeSite === name) {
+        activeSite = null;
+        chatHeader.textContent = "Select a site to start asking questions";
         chatLog.innerHTML = "";
         setInputEnabled(false);
       }
-      loadSubreddits();
+      loadSites();
     });
 
     li.appendChild(nameSpan);
     li.appendChild(removeBtn);
-    subredditListEl.appendChild(li);
+    siteListEl.appendChild(li);
   }
 }
 
@@ -74,7 +74,7 @@ addForm.addEventListener("submit", async (e) => {
   const name = addInput.value.trim();
   if (!name) return;
 
-  const res = await fetch("/api/subreddits", {
+  const res = await fetch("/api/sites", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -82,20 +82,20 @@ addForm.addEventListener("submit", async (e) => {
 
   if (res.ok) {
     addInput.value = "";
-    loadSubreddits();
+    loadSites();
   } else {
     const { error } = await res.json();
-    alert(error || "Couldn't add that subreddit.");
+    alert(error || "Couldn't add that site.");
   }
 });
 
-function selectSubreddit(name) {
-  activeSubreddit = name;
-  chatHeader.textContent = `r/${name}`;
+function selectSite(name) {
+  activeSite = name;
+  chatHeader.textContent = name;
   chatLog.innerHTML = "";
   setInputEnabled(true);
   askInput.focus();
-  loadSubreddits(); // re-render to highlight active item
+  loadSites(); // re-render to highlight active item
 }
 
 function setInputEnabled(enabled) {
@@ -108,14 +108,14 @@ function setInputEnabled(enabled) {
 askForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const question = askInput.value.trim();
-  if (!question || !activeSubreddit) return;
+  if (!question || !activeSite) return;
 
   addMessage(question, "user");
   askInput.value = "";
   setInputEnabled(false);
 
   const loadingEl = addMessage(
-    `Fetching recent posts from r/${activeSubreddit} and asking Claude...`,
+    `Fetching recent questions from ${activeSite} and asking Claude...`,
     "loading"
   );
 
@@ -123,7 +123,7 @@ askForm.addEventListener("submit", async (e) => {
     const res = await fetch("/api/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subreddit: activeSubreddit, question }),
+      body: JSON.stringify({ site: activeSite, question }),
     });
 
     const data = await res.json();
@@ -181,4 +181,4 @@ function addAssistantMessage(answerText, sources) {
 
 // --- Init ---------------------------------------------------------------
 
-loadSubreddits();
+loadSites();
