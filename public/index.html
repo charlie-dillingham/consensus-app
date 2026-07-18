@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reddit Consensus</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h1>Reddit Consensus</h1>
+
+      <form id="add-form" class="add-form">
+        <input id="add-input" type="text" placeholder="e.g. Cooking" autocomplete="off" />
+        <button type="submit">Add</button>
+      </form>
+
+      <ul id="subreddit-list" class="subreddit-list"></ul>
+    </aside>
+
+    <main class="chat">
+      <div id="chat-header" class="chat-header">
+        Select a subreddit to start asking questions
+      </div>
+
+      <div id="chat-log" class="chat-log"></div>
+
+      <form id="ask-form" class="ask-form">
+        <input
+          id="ask-input"
+          type="text"
+          placeholder="Ask a question about this subreddit..."
+          autocomplete="off"
+          disabled
+        />
+        <button id="ask-button" type="submit" disabled>Ask</button>
+      </form>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
